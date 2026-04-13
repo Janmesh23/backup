@@ -52,7 +52,10 @@ pub fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
         ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
         signer,
-    );
+    ).with_remaining_accounts(vec![
+        ctx.accounts.extra_account_meta_list.to_account_info(),
+        ctx.accounts.transfer_hook_program.to_account_info(),
+    ]);
     transfer_checked(cpi_ctx, payout, ctx.accounts.collateral_mint.decimals)?;
 
     // 2. Mark position as claimed
@@ -73,10 +76,16 @@ pub struct ClaimWinnings<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
 
+    pub collateral_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
+
     #[account(
         mut,
         seeds = [b"market", market.creator.as_ref(), &market.market_id.to_le_bytes()],
-        bump = market.bump
+        bump = market.bump,
     )]
     pub market: Account<'info, Market>,
 
@@ -93,6 +102,7 @@ pub struct ClaimWinnings<'info> {
         mut,
         token::mint = collateral_mint,
         token::authority = owner,
+        token::token_program = token_program,
     )]
     pub claimant_token_account: InterfaceAccount<'info, TokenAccount>,
 
@@ -100,10 +110,19 @@ pub struct ClaimWinnings<'info> {
         mut,
         associated_token::mint = collateral_mint,
         associated_token::authority = market,
+        associated_token::token_program = token_program,
     )]
     pub market_escrow: InterfaceAccount<'info, TokenAccount>,
 
-    pub collateral_mint: InterfaceAccount<'info, Mint>,
-    pub token_program: Interface<'info, TokenInterface>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    /// CHECK: Validated via seeds in the transfer hook program
+    #[account(
+        seeds = [b"extra-account-metas", collateral_mint.key().as_ref()],
+        seeds::program = transfer_hook_program.key(),
+        bump
+    )]
+    pub extra_account_meta_list: UncheckedAccount<'info>,
+
+    /// CHECK: Validated via address constraint to the repo's transfer hook program
+    #[account(address = pubkey!("G6tkJFd5Qkt6Nw2c7GgABdVSN71KjiajpkDMtviCn2d6"))]
+    pub transfer_hook_program: UncheckedAccount<'info>,
 }

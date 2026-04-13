@@ -25,8 +25,12 @@ pub fn handler(ctx: Context<SamplePrice>) -> Result<()> {
     let price_account: &PriceAccount = pyth_sdk_solana::state::load_price_account(&price_account_data)
         .map_err(|_| MarketError::PriceStale)?;
 
-    // Status check on the account level
+    // Status and Age check
     require!(price_account.agg.status == PriceStatus::Trading, MarketError::PriceStale);
+    require!(
+        price_account.timestamp >= clock.unix_timestamp - MAX_PRICE_AGE_SECONDS as i64,
+        MarketError::PriceStale
+    );
 
     // Manual confidence check (conf / price < 0.005)
     let price_val = price_account.agg.price;

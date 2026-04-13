@@ -32,7 +32,11 @@ pub fn handler(ctx: Context<PlaceBet>, side: u8, amount: u64) -> Result<()> {
         to: ctx.accounts.market_escrow.to_account_info(),
         authority: ctx.accounts.bettor.to_account_info(),
     };
-    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts)
+        .with_remaining_accounts(vec![
+            ctx.accounts.extra_account_meta_list.to_account_info(),
+            ctx.accounts.transfer_hook_program.to_account_info(),
+        ]);
     transfer_checked(cpi_ctx, amount, ctx.accounts.collateral_mint.decimals)?;
 
     // 2. Update position
@@ -73,6 +77,14 @@ pub struct PlaceBet<'info> {
     #[account(mut)]
     pub bettor: Signer<'info>,
 
+    pub collateral_mint: InterfaceAccount<'info, Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
+
+    pub system_program: Program<'info, System>,
+
     #[account(
         mut,
         seeds = [b"market", market.creator.as_ref(), &market.market_id.to_le_bytes()],
@@ -93,6 +105,7 @@ pub struct PlaceBet<'info> {
         mut,
         token::mint = collateral_mint,
         token::authority = bettor,
+        token::token_program = token_program,
     )]
     pub bettor_token_account: InterfaceAccount<'info, TokenAccount>,
 
@@ -100,15 +113,22 @@ pub struct PlaceBet<'info> {
         mut,
         associated_token::mint = collateral_mint,
         associated_token::authority = market,
+        associated_token::token_program = token_program,
     )]
     pub market_escrow: InterfaceAccount<'info, TokenAccount>,
-
-    pub collateral_mint: InterfaceAccount<'info, Mint>,
 
     /// Optional: Only required if market.is_private is true
     pub room_access: Option<Account<'info, RoomAccess>>,
 
-    pub token_program: Interface<'info, TokenInterface>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub system_program: Program<'info, System>,
+    /// CHECK: Validated via seeds in the transfer hook program
+    #[account(
+        seeds = [b"extra-account-metas", collateral_mint.key().as_ref()],
+        seeds::program = transfer_hook_program.key(),
+        bump
+    )]
+    pub extra_account_meta_list: UncheckedAccount<'info>,
+
+    /// CHECK: Validated via address constraint to the repo's transfer hook program
+    #[account(address = pubkey!("G6tkJFd5Qkt6Nw2c7GgABdVSN71KjiajpkDMtviCn2d6"))]
+    pub transfer_hook_program: UncheckedAccount<'info>,
 }

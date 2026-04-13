@@ -1,16 +1,16 @@
 "use client";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction, ComputeBudgetProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, createAssociatedTokenAccountInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { toast } from "sonner";
 import { BN } from "@coral-xyz/anchor";
 import Navbar from "@/components/layout/Navbar";
 import PriceDisplay from "@/components/markets/PriceDisplay";
 import { useProgram } from "@/hooks/useProgram";
 import { checkRoomAccess, buyRoomAccess } from "@/lib/x402";
-import { PYTH_FEEDS, PREDICTION_MARKET_PROGRAM_ID } from "@/lib/constants";
+import { PYTH_FEEDS, PREDICTION_MARKET_PROGRAM_ID, TRANSFER_HOOK_PROGRAM_ID } from "@/lib/constants";
 import { Clock, Lock, Unlock, TrendingUp } from "lucide-react";
 
 type BetState = "idle" | "simulating" | "awaiting-signature" | "confirming" | "confirmed";
@@ -46,7 +46,7 @@ export default function MarketDetailPage() {
   const fetchMarket = useCallback(async (retryCount = 0) => {
     if (!program) return;
     try {
-      const acc = await (program.account as any).market.fetch(new PublicKey(id));
+      const acc = await (program.account as any).market.fetch(new PublicKey(id.toString()));
       setMarket(acc);
     } catch (e: any) {
       if (e.message?.includes("Account does not exist") || e.message?.includes("discriminator") || e.message?.includes("3012")) {
@@ -62,7 +62,7 @@ export default function MarketDetailPage() {
   const fetchBalance = useCallback(async () => {
     if (!wallet || !market) return;
     try {
-      const collateralMint = new PublicKey(market.collateralMint);
+      const collateralMint = new PublicKey(market.collateralMint.toString());
       const ata = getAssociatedTokenAddressSync(collateralMint, wallet, false, TOKEN_2022_PROGRAM_ID);
       const info = await connection.getTokenAccountBalance(ata);
       setTokenBalance(info.value.uiAmountString || "0");
@@ -75,7 +75,7 @@ export default function MarketDetailPage() {
 
   useEffect(() => {
     if (!wallet || !market) return;
-    checkRoomAccess(connection, new PublicKey(id), wallet).then(setHasAccess);
+    checkRoomAccess(connection, new PublicKey(id.toString()), wallet).then(setHasAccess);
   }, [wallet, market, connection, id]);
 
   useEffect(() => { fetchBalance(); }, [fetchBalance]);
@@ -123,7 +123,7 @@ export default function MarketDetailPage() {
   async function handleBuyAccess() {
     if (!wallet || !program) return toast.error("Connect your wallet first");
     try {
-      const sig = await buyRoomAccess(program, new PublicKey(id), wallet, sendTransaction, connection);
+      const sig = await buyRoomAccess(program, new PublicKey(id.toString()), wallet, sendTransaction, connection);
       toast.success("Access granted!", {
         action: { label: "Explorer", onClick: () => window.open(`https://explorer.solana.com/tx/${sig}?cluster=devnet`) },
       });
@@ -137,8 +137,8 @@ export default function MarketDetailPage() {
     if (!wallet || !program || !market) return;
     setFaucetLoading(true);
     try {
-      const marketPda = new PublicKey(id);
-      const collateralMint = new PublicKey(market.collateralMint);
+      const marketPda = new PublicKey(id.toString());
+      const collateralMint = new PublicKey(market.collateralMint.toString());
       const ata = getAssociatedTokenAddressSync(collateralMint, wallet, false, TOKEN_2022_PROGRAM_ID);
       
       const sig = await (program.methods as any)
@@ -172,8 +172,8 @@ export default function MarketDetailPage() {
 
     setBetState("simulating");
     try {
-      const marketPda = new PublicKey(id);
-      const collateralMint = new PublicKey(market.collateralMint);
+      const marketPda = new PublicKey(id.toString());
+      const collateralMint = new PublicKey(market.collateralMint.toString());
       const bettorAta = getAssociatedTokenAddressSync(collateralMint, wallet, false, TOKEN_2022_PROGRAM_ID);
       const escrowAta = getAssociatedTokenAddressSync(collateralMint, marketPda, true, TOKEN_2022_PROGRAM_ID);
 
@@ -220,15 +220,28 @@ export default function MarketDetailPage() {
         marketEscrow: escrowAta,
         collateralMint,
         roomAccess: (market.isPrivate && isRoomInitialized) ? roomPda : null,
+        extraAccountMetaList: PublicKey.findProgramAddressSync(
+          [Buffer.from("extra-account-metas"), collateralMint.toBuffer()],
+          TRANSFER_HOOK_PROGRAM_ID
+        )[0],
+        transferHookProgram: TRANSFER_HOOK_PROGRAM_ID,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
-        associatedTokenProgram: new PublicKey("ATokenGPvbdQxrV9zQGf6E6N6a4PzS8n37K98634"),
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
       };
 
-      const tx = await (program.methods as any)
+      const tx = new Transaction();
+      
+      // 🚀 NITRO BOOST: Increase compute budget for Token-2022 hooks + Position Init
+      tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 400000 }));
+
+      const betIx = await (program.methods as any)
         .placeBet(side, rawAmount)
         .accounts(accounts)
-        .transaction();
+        .instruction();
+      
+      tx.add(betIx);
 
       tx.feePayer = wallet;
       tx.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;

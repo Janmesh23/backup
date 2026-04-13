@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Keypair, ComputeBudgetProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { getAssociatedTokenAddressSync, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
@@ -19,7 +19,7 @@ const ASSET_OPTIONS = Object.entries(PYTH_FEEDS).map(([label, pubkey]) => ({
 export default function CreateMarketPage() {
   const program = useProgram();
   const { connection } = useConnection();
-  const { publicKey: wallet, sendTransaction } = useWallet();
+  const { publicKey: wallet, sendTransaction, connected } = useWallet();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -50,7 +50,7 @@ export default function CreateMarketPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!wallet || !program) return toast.error("Connect your wallet first");
+    if (!connected || !wallet || !program) return toast.error("Connect your wallet first");
 
     const err = validate();
     if (err) return toast.error(err);
@@ -202,7 +202,7 @@ export default function CreateMarketPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  if (!wallet || !program) return toast.error("Connect wallet to mint");
+                  if (!connected || !wallet || !program) return toast.error("Connect wallet to mint");
                   setLoading(true);
                   try {
                     const mintKp = Keypair.generate();
@@ -220,10 +220,19 @@ export default function CreateMarketPage() {
                         creator: wallet,
                         mint: mintKp.publicKey,
                         creatorTokenAccount: creatorAta,
+                        extraAccountMetaList: PublicKey.findProgramAddressSync(
+                          [Buffer.from("extra-account-metas"), mintKp.publicKey.toBuffer()],
+                          TRANSFER_HOOK_PROGRAM_ID
+                        )[0],
                         transferHookProgram: TRANSFER_HOOK_PROGRAM_ID,
                         tokenProgram: TOKEN_2022_PROGRAM_ID,
+                        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                         systemProgram: SystemProgram.programId,
+                        rent: SYSVAR_RENT_PUBKEY,
                       } as any)
+                      .preInstructions([
+                        ComputeBudgetProgram.setComputeUnitLimit({ units: 800000 }),
+                      ])
                       .transaction();
 
                     tx.feePayer = wallet;

@@ -71,6 +71,34 @@ pub fn handler(ctx: Context<MintRwa>, args: MintRwaArgs) -> Result<()> {
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     mint_to(cpi_ctx, args.initial_supply)?;
 
+    // 5. Initialize Transfer Hook ExtraAccountMetaList
+    let (meta_list_pda, _bump) = Pubkey::find_program_address(
+        &[b"extra-account-metas", ctx.accounts.mint.key().as_ref()],
+        &ctx.accounts.transfer_hook_program.key(),
+    );
+
+    // Anchor discriminator for "global:initialize_extra_account_meta_list"
+    let mut data = vec![75, 243, 55, 60, 49, 241, 211, 241];
+    
+    anchor_lang::solana_program::program::invoke(
+        &anchor_lang::solana_program::instruction::Instruction {
+            program_id: ctx.accounts.transfer_hook_program.key(),
+            accounts: vec![
+                AccountMeta::new(ctx.accounts.creator.key(), true),
+                AccountMeta::new(meta_list_pda, false),
+                AccountMeta::new_readonly(ctx.accounts.mint.key(), false),
+                AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
+            ],
+            data,
+        },
+        &[
+            ctx.accounts.creator.to_account_info(),
+            ctx.accounts.extra_account_meta_list.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        ],
+    )?;
+
     emit!(RwaMinted {
         mint: ctx.accounts.mint.key(),
         creator: ctx.accounts.creator.key(),
@@ -120,9 +148,19 @@ pub struct MintRwa<'info> {
     )]
     pub creator_token_account: InterfaceAccount<'info, TokenAccount>,
 
+    /// CHECK: Initialized via CPI to transfer_hook_program in the handler
+    #[account(
+        mut,
+        seeds = [b"extra-account-metas", mint.key().as_ref()],
+        seeds::program = transfer_hook_program.key(),
+        bump
+    )]
+    pub extra_account_meta_list: UncheckedAccount<'info>,
+
     /// CHECK: Validated via address constraint to the repo's transfer hook program
-    #[account(address = pubkey!("92qKWPPnd9LaHj2dEiPCKuBJ94nb7TkHCR4gvYKE2ofB"))]
+    #[account(address = pubkey!("G6tkJFd5Qkt6Nw2c7GgABdVSN71KjiajpkDMtviCn2d6"))]
     pub transfer_hook_program: UncheckedAccount<'info>,
+
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
