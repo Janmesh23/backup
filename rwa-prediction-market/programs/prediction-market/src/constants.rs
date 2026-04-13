@@ -1,0 +1,2 @@
+pub const TWAP_WINDOW_SECONDS: i64 = 3600;
+pub const MAX_PRICE_AGE_SECONDS: u64 = 1_000_000;

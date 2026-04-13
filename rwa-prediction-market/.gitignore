@@ -1,0 +1,40 @@
+# --- Solana / Anchor ---
+.anchor/
+target/
+test-ledger/
+**/*.rs.bk
+deploy-keypairs/
+**/*keypair.json
+**/*.keypair
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+build/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- IDE / System ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.pms
+thumbs.db
+
+# --- Performance / Cache ---
+.eslintcache
+.stylelintcache
+node_modules/
+.cache/
