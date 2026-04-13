@@ -1,5 +1,5 @@
 {
-  "address": "9t99QGY5dSmQv9RcomjrCHBmvfYhgwdrWjVspb1QmBT7",
+  "address": "BVSgTqXMeAnTJiUcAB6SG5CXAsthxxVxm14ygVa9knGe",
   "metadata": {
     "name": "prediction_market",
     "version": "0.1.0",
@@ -109,9 +109,12 @@
       ],
       "accounts": [
         {
-          "name": "bettor",
+          "name": "owner",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "position"
+          ]
         },
         {
           "name": "market",
@@ -169,17 +172,10 @@
               },
               {
                 "kind": "account",
-                "path": "bettor"
+                "path": "owner"
               }
             ]
           }
-        },
-        {
-          "name": "owner",
-          "signer": true,
-          "relations": [
-            "position"
-          ]
         },
         {
           "name": "bettor_token_account",
@@ -191,21 +187,88 @@
           "pda": {
             "seeds": [
               {
+                "kind": "account",
+                "path": "market"
+              },
+              {
                 "kind": "const",
                 "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
                   101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
                 "kind": "account",
-                "path": "market"
+                "path": "collateral_mint"
               }
-            ]
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -213,6 +276,10 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         }
       ],
       "args": []
@@ -231,9 +298,12 @@
       ],
       "accounts": [
         {
-          "name": "claimant",
+          "name": "owner",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "position"
+          ]
         },
         {
           "name": "market",
@@ -291,17 +361,10 @@
               },
               {
                 "kind": "account",
-                "path": "claimant"
+                "path": "owner"
               }
             ]
           }
-        },
-        {
-          "name": "owner",
-          "signer": true,
-          "relations": [
-            "position"
-          ]
         },
         {
           "name": "claimant_token_account",
@@ -313,21 +376,88 @@
           "pda": {
             "seeds": [
               {
+                "kind": "account",
+                "path": "market"
+              },
+              {
                 "kind": "const",
                 "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
                   101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
                 "kind": "account",
-                "path": "market"
+                "path": "collateral_mint"
               }
-            ]
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -335,6 +465,10 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         }
       ],
       "args": []
@@ -383,6 +517,73 @@
               }
             ]
           }
+        },
+        {
+          "name": "market_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "collateral_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "collateral_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "system_program",
@@ -447,6 +648,14 @@
           "signer": true
         },
         {
+          "name": "creator",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
           "name": "market",
           "pda": {
             "seeds": [
@@ -463,8 +672,7 @@
               },
               {
                 "kind": "account",
-                "path": "market.creator",
-                "account": "Market"
+                "path": "creator"
               },
               {
                 "kind": "account",
@@ -639,7 +847,8 @@
           }
         },
         {
-          "name": "transfer_hook_program"
+          "name": "transfer_hook_program",
+          "address": "92qKWPPnd9LaHj2dEiPCKuBJ94nb7TkHCR4gvYKE2ofB"
         },
         {
           "name": "token_program"
@@ -754,21 +963,88 @@
           "pda": {
             "seeds": [
               {
+                "kind": "account",
+                "path": "market"
+              },
+              {
                 "kind": "const",
                 "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
                   101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
                 "kind": "account",
-                "path": "market"
+                "path": "collateral_mint"
               }
-            ]
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -783,6 +1059,10 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "system_program",
@@ -1144,6 +1424,31 @@
       "code": 6016,
       "name": "Overflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6017,
+      "name": "MarketIdentifierTooLong",
+      "msg": "Market title too long — max 100 chars"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidPrice",
+      "msg": "Strike price must be positive"
+    },
+    {
+      "code": 6019,
+      "name": "MarketNotPrivate",
+      "msg": "Market is not private — entry fee unnecessary"
+    },
+    {
+      "code": 6020,
+      "name": "InsufficientSamples",
+      "msg": "Insufficient TWAP samples — wait for more price updates"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidPythFeed",
+      "msg": "Invalid Pyth price feed account provided"
     }
   ],
   "types": [

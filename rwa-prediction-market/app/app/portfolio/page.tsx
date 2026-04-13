@@ -100,10 +100,7 @@ export default function PortfolioPage() {
       const marketPda = new PublicKey(pos.marketPda);
       const collateralMint = new PublicKey(pos.collateralMint);
       const claimantAta = getAssociatedTokenAddressSync(collateralMint, wallet, false, TOKEN_2022_PROGRAM_ID);
-      const [escrowPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("escrow"), marketPda.toBuffer()],
-        PREDICTION_MARKET_PROGRAM_ID
-      );
+      const marketEscrowAta = getAssociatedTokenAddressSync(collateralMint, marketPda, true, TOKEN_2022_PROGRAM_ID);
 
       const tx = await (program.methods as any)
         .claimWinnings()
@@ -113,9 +110,11 @@ export default function PortfolioPage() {
           position: new PublicKey(pos.positionPda),
           owner: wallet,
           claimantTokenAccount: claimantAta,
-          marketEscrow: escrowPda,
+          marketEscrow: marketEscrowAta,
           collateralMint,
           tokenProgram: TOKEN_2022_PROGRAM_ID,
+          associatedTokenProgram: new PublicKey("ATokenGPvbdQxrV9zQGf6E6N6a4PzS8n37K98634"),
+          systemProgram: SystemProgram.programId,
         })
         .transaction();
 

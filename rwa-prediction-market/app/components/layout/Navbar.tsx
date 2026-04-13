@@ -1,4 +1,5 @@
 "use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
@@ -55,8 +56,8 @@ export default function Navbar() {
 }
 
 function ClientOnlyWalletButton() {
-  const [mounted, setMounted] = (require("react") as typeof import("react")).useState(false);
-  (require("react") as typeof import("react")).useEffect(() => setMounted(true), []);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   if (!mounted) return <div className="h-[36px] w-[140px] bg-muted animate-pulse rounded-lg" />;
 

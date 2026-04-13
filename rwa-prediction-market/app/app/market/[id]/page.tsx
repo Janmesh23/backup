@@ -221,6 +221,7 @@ export default function MarketDetailPage() {
         collateralMint,
         roomAccess: (market.isPrivate && isRoomInitialized) ? roomPda : null,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: new PublicKey("ATokenGPvbdQxrV9zQGf6E6N6a4PzS8n37K98634"),
         systemProgram: SystemProgram.programId,
       };
 

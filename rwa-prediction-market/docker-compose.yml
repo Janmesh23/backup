@@ -1,0 +1,27 @@
+services:
+  anchor-dev:
+    build: .
+    volumes:
+      - .:/app
+      - ~/.config/solana:/root/.config/solana:ro
+      - cargo-cache:/root/.cargo/registry
+      - cargo-git:/root/.cargo/git
+      - solana-cache:/root/.local/share/solana
+    working_dir: /app
+    environment:
+      - ANCHOR_WALLET=/root/.config/solana/id.json
+    # Default to build, but you can override this with bash to enter the container
+    command: anchor build
+
+  validator:
+    image: anchorlabs/solana-dev:v1.18.12
+    ports:
+      - "8899:8899"
+      - "8900:8900"
+      - "9900:9900"
+    command: solana-test-validator --log
+
+volumes:
+  cargo-cache:
+  cargo-git:
+  solana-cache:

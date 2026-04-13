@@ -8,11 +8,11 @@ export const RPC_URL = CLUSTER === "devnet"
   : "http://127.0.0.1:8899";
 
 export const PREDICTION_MARKET_PROGRAM_ID = new PublicKey(
-  "9t99QGY5dSmQv9RcomjrCHBmvfYhgwdrWjVspb1QmBT7"
+  "BVSgTqXMeAnTJiUcAB6SG5CXAsthxxVxm14ygVa9knGe"
 );
 
 export const TRANSFER_HOOK_PROGRAM_ID = new PublicKey(
-  "92qKWPPnd9LaHj2dEiPCKuBJ94nb7TkHCR4gvYKE2ofB"
+  "G6tkJFd5Qkt6Nw2c7GgABdVSN71KjiajpkDMtviCn2d6"
 );
 
 export const TOKEN_2022_PROGRAM_ID = new PublicKey(
